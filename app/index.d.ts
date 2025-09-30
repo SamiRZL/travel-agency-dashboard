@@ -2,7 +2,7 @@ declare interface BaseUser {
   id: string;
   name: string;
   email: string;
-  dateJoined: string;
+  $createdAt: string;
   imageUrl: string;
 }
 

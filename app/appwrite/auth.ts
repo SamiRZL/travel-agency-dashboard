@@ -16,28 +16,43 @@ export const loginWithGoogle = async () => {
 export const getUser = async () => {
     try {
         const user = await account.get()
-        if (!user) return redirect('/sign-in')
+        if (!user) throw redirect('/sign-in')
         const { rows } = await tablesDB.listRows({
-            databaseId: appwriteConfig.databaseId, tableId: appwriteConfig.userCollectionId, queries: [Query.equal('id', user.$id), Query.select(['name', 'email', 'imageUrl', 'joinedAt', '$id'])]
+            databaseId: appwriteConfig.databaseId, tableId: appwriteConfig.userCollectionId, queries: [Query.equal('accountId', user.$id), Query.select(['name', 'email', 'imageUrl', '$createdAt', 'accountId'])]
         })
-        return rows.length > 0 ? rows[0] : redirect("/sign-in");
+        if (rows.length === 0) throw redirect('/sign-in') // User data not found
 
+        return rows[0] as unknown as User
     } catch (e) {
         console.error(e)
-        return null
+        throw redirect('/sign-in') // Any error -> redirect
     }
 }
 
 export const getExistingUser = async (id: string) => {
+    console.log("id param : ", id)
     try {
         const { rows, total } = await tablesDB.listRows({
             databaseId: appwriteConfig.databaseId, tableId: appwriteConfig.userCollectionId, queries:
-                [Query.equal("id", id)]
+                [Query.equal("accountId", id)]
         });
+        console.log("rows : ", rows)
         return total > 0 ? rows[0] : null;
     } catch (error) {
         console.error("Error fetching user:", error);
         return null;
+    }
+};
+export const getAllUsers = async (limit: number, offset: number) => {
+    try {
+        const { rows, total } = await tablesDB.listRows({
+            databaseId: appwriteConfig.databaseId, tableId: appwriteConfig.userCollectionId,
+            queries: [Query.limit(limit), Query.offset(offset)]
+        });
+        return total > 0 ? { rows, total } : { rows: [], total: 0 };
+    } catch (error) {
+        console.error("Error fetching user:", error);
+        return { rows: [], total: 0 }
     }
 };
 
@@ -61,18 +76,17 @@ export const storeUserData = async () => {
                 email: user.email,
                 name: user.name,
                 imageUrl: profilePicture,
-                joinedAt: new Date().toISOString(),
             }
         });
-
-        if (!createdUser.$id) redirect("/sign-in");
+        if (!createdUser.accountId) redirect("/sign-in");
     } catch (error) {
         console.error("Error storing user data:", error);
     }
 };
 
-const getGooglePicture = async (accessToken: string) => {
+export const getGooglePicture = async (accessToken: string) => {
     try {
+        console.log("access token",)
         const response = await fetch(
             "https://people.googleapis.com/v1/people/me?personFields=photos",
             { headers: { Authorization: `Bearer ${accessToken}` } }
@@ -80,6 +94,7 @@ const getGooglePicture = async (accessToken: string) => {
         if (!response.ok) throw new Error("Failed to fetch Google profile picture");
 
         const { photos } = await response.json();
+        console.log("here are the photos")
         return photos?.[0]?.url || null;
     } catch (error) {
         console.error("Error fetching Google picture:", error);
