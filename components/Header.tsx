@@ -12,7 +12,7 @@ const Header = ({ title, description, ctaText, cta }: { title: string, descripti
             </article>
             {ctaText && cta && (
                 <Link to={cta}>
-                    <ButtonComponent type='button' className="button-class !h11 !w-full md:w-[240px]">
+                    <ButtonComponent type='button' className="button-class !h11 !w-full md:w-[350px]">
                         <img src="/assets/icons/plus.svg" alt="plus" className="size-5" />
                         <span className="p-16-semibold text-white">{ctaText}</span>
                     </ButtonComponent>

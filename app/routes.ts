@@ -10,5 +10,8 @@ export default [
         route('dashboard', 'routes/admin/dashboard.tsx'),
         route('trips', 'routes/admin/trips.tsx'),
         route('trips/create', 'routes/admin/create-trips.tsx'),
+    ]),
+    layout('routes/root/page-layout.tsx', [
+        index('routes/root/travel-page.tsx')
     ])
 ] satisfies RouteConfig;
