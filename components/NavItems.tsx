@@ -3,7 +3,9 @@ import { logoutUser } from "~/appwrite/auth";
 import { sidebarItems } from "~/constants"
 import { cn } from "~/lib/utils"
 const NavItems = ({ handleClick }: { handleClick?: () => void }) => {
+
     const user = useLoaderData();
+    console.log("user info frm nav", user)
     const navigate = useNavigate()
 
     const handleLogout = async () => {
@@ -36,7 +38,7 @@ const NavItems = ({ handleClick }: { handleClick?: () => void }) => {
                     ))}
                 </nav>
                 <footer className="nav-footer">
-                    <img src={user?.imageUrl || '/assets/images/david.webp'} alt={user?.name || 'David'} className="" />
+                    <img referrerPolicy="no-referrer" src={user?.imageUrl || '/assets/images/david.webp'} alt={user?.name || 'David'} className="rounded-full size-8 aspect-ratio" />
                     <article>
                         <h2>{user?.name}</h2>
                         <p>{user?.email}</p>
@@ -46,7 +48,8 @@ const NavItems = ({ handleClick }: { handleClick?: () => void }) => {
                     </button>
                 </footer>
             </div>
-        </section>)
+        </section>
+    )
 }
 
 export default NavItems

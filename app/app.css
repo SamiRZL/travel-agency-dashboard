@@ -174,14 +174,14 @@
   }
 
   .travel-detail {
-    @apply flex flex-col gap-10 pb-20;
+    @apply flex flex-col gap-5 pb-20;
 
     .travel-div {
       @apply flex flex-col lg:flex-row gap-10;
     }
 
     .back-link {
-      @apply flex items-center justify-center gap-2.5 py-3 px-[30px] border-gray-200 rounded-lg shadow-500 bg-white h-[50px] w-[240px];
+      @apply flex items-center justify-center gap-2.5 py-3 px-[20px] border-gray-200 rounded-lg shadow-500 bg-white h-[50px] w-[200px];
 
       img {
         @apply size-[17px];

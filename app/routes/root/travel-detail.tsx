@@ -1,20 +1,25 @@
-import type { LoaderFunctionArgs } from "react-router"
+import { Link, useRouteLoaderData, type LoaderFunctionArgs } from "react-router"
 import { getAllTrips, getTripById } from "~/appwrite/trips"
-import type { Route } from "./+types/trips-detail"
+import { useEffect, useState } from "react"
 import { cn, getFirstWord, parseTripData } from "~/lib/utils"
 import { Header, InfoPill, TripCard } from "components"
-import { ChipDirective, ChipListComponent, ChipsDirective } from "@syncfusion/ej2-react-buttons"
+import { ButtonComponent, ChipDirective, ChipListComponent, ChipsDirective } from "@syncfusion/ej2-react-buttons"
+import type { Route } from "./+types/travel-detail"
+import { handleCheckout } from "~/appwrite/stripeSession"
+import { getBookedTripById } from "~/appwrite/bookedTrips"
 
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
+
     const { id } = params
     if (!id) throw new Error("Empty id")
     const [trip, trips] = await Promise.all([
         getTripById(id),
-        getAllTrips(4, 0)
+        getAllTrips(4, 0),
     ])
 
     return {
+
         trip,
         allTrips: trips?.rows?.map(({ $id, tripDetail, imageUrls, }) => (
             {
@@ -26,8 +31,36 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     }
 }
 
-const TripsDetail = ({ loaderData }: Route.ComponentProps) => {
-    console.log("lodaer trip details", loaderData)
+const TravelDetail = ({ loaderData }: Route.ComponentProps) => {
+    const [loading, setloading] = useState(false);
+    const [isBooked, setIsBooked] = useState(false);
+
+    const loadingCheckout = async (data: Trip, imageUrl: string, tripId: string, userId: string) => {
+        setloading(true)
+        await handleCheckout(data, imageUrl, tripId, userId)
+        setloading(false)
+
+
+    }
+    const user = useRouteLoaderData("routes/root/page-layout");
+
+
+    useEffect(() => {
+        const checkBooking = async () => {
+            if (loaderData?.trip?.$id && user.$id) {
+                try {
+                    const result = await getBookedTripById(user.$id, loaderData?.trip?.$id);
+                    setIsBooked(result);
+                } catch (error) {
+                    console.error("Error checking booking:", error);
+                }
+            }
+        };
+
+        checkBooking(); // ✅ run once on mount
+    }, [loaderData?.trip?.$id]);
+    console.log("User from layout clientLoader:", user);
+    const tripId = loaderData?.trip?.$id
     const imageUrls = loaderData?.trip?.imageUrls
     const tripDetailData = parseTripData(loaderData?.trip?.tripDetail)
     const { name, duration, itinerary, travelStyle, interests, groupType, budget, description, weatherInfo, bestTimeToVisit, country, estimatedPrice } = tripDetailData || {}
@@ -43,8 +76,11 @@ const TripsDetail = ({ loaderData }: Route.ComponentProps) => {
         { title: 'Weather:', items: weatherInfo }
     ]
     return (
-        <main className="travel-detail wrapper">
-            <Header title='Trip Details' description='View and edit AI-generated travel plans' />
+        <main className="travel-detail  pt-5 lg:pt-[5.5rem] wrapper">
+            <Link to={'/'} className="back-link ">
+                <img src="/assets/icons/arrow-left.svg" alt="go back button" className="" />
+                <span>Go back</span>
+            </Link>
             <section className="container wrapper-md">
                 <header>
                     <h1 className="p-40-semibold text-dark-100">{name}</h1>
@@ -121,9 +157,44 @@ const TripsDetail = ({ loaderData }: Route.ComponentProps) => {
                         </div>
                     </section>
                 ))}
+                <section className="w-full">
+                    <ButtonComponent
+                        disabled={isBooked || loading} // disable if already booked or loading
+                        onClick={() => loadingCheckout(tripDetailData!, imageUrls[0], tripId!, user.$id)}
+                        className={cn(
+                            "!w-full !flex !items-center !justify-center !rounded !py-3 !text-sm !font-semibold",
+                            isBooked
+                                ? "!bg-green-500 !cursor-not-allowed" // booked state
+                                : "!bg-blue-500 hover:!bg-blue-600 !text-white"
+                        )}
+                    >
+                        {loading ? (
+                            // 🔄 Loading spinner
+                            <div className="flex items-center justify-center gap-2">
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                <span className="text-white text-sm">Processing...</span>
+                            </div>
+                        ) : isBooked ? (
+                            // ✅ Already booked
+                            <span className="!w-full !flex !items-center !justify-center !gap-2 text-white">
+                                Booked Trip ✅
+                            </span>
+                        ) : (
+                            // 💳 Default state
+                            <span className="!w-full !flex !items-center !justify-center !gap-2">
+                                Pay and join trip
+                                <article className="bg-white py-1 px-2.5 w-fit rounded-[20px] text-dark-100 text-sm font-semibold">
+                                    {estimatedPrice}$
+                                </article>
+                            </span>
+                        )}
+                    </ButtonComponent>
 
+
+                </section>
             </section>
-            <section className="flex flex-col gap-6">
+
+            <section className="flex flex-col mt-5 gap-6">
                 <h2 className="p-24-semibold text-dark-100">Popular Trips</h2>
                 <div className="trip-grid">
                     {allTrips?.map((trip) => (
@@ -131,8 +202,9 @@ const TripsDetail = ({ loaderData }: Route.ComponentProps) => {
                     ))}
                 </div>
             </section>
+
         </main>
     )
 }
 
-export default TripsDetail
+export default TravelDetail

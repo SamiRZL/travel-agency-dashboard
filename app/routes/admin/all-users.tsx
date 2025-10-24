@@ -25,7 +25,7 @@ const AllUsers = ({ loaderData }: Route.ComponentProps) => {
                 <ColumnsDirective>
                     <ColumnDirective template={(props: UserData) => (
                         <div className="flex items-center gap-1.5 px-4">
-                            <img src={props?.imageUrl ? props.imageUrl : '/assets/images/david.webp'} alt="user" className="rounded-full size-8 aspect-ratio" />
+                            <img referrerPolicy="no-referrer" src={props?.imageUrl ? props.imageUrl : '/assets/images/david.webp'} alt="user" className="rounded-full size-8 aspect-ratio" />
                             <span className="">{props.name}</span>
                         </div>
                     )} field="name" headerText="Name" width="200" textAlign="Left" />

@@ -88,14 +88,14 @@ export const getGooglePicture = async (accessToken: string) => {
     try {
         console.log("access token",)
         const response = await fetch(
-            "https://people.googleapis.com/v1/people/me?personFields=photos",
+            "https://www.googleapis.com/oauth2/v2/userinfo",
             { headers: { Authorization: `Bearer ${accessToken}` } }
         );
         if (!response.ok) throw new Error("Failed to fetch Google profile picture");
 
-        const { photos } = await response.json();
-        console.log("here are the photos")
-        return photos?.[0]?.url || null;
+        const { picture } = await response.json();
+        console.log("here is the picture ", picture)
+        return picture || null;
     } catch (error) {
         console.error("Error fetching Google picture:", error);
         return null;
